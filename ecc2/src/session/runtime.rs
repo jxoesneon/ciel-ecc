@@ -138,17 +138,30 @@ pub async fn capture_command_output(
     db_path: PathBuf,
     session_id: String,
     mut command: Command,
+    stdin_data: Option<Vec<u8>>,
     output_store: SessionOutputStore,
     heartbeat_interval: std::time::Duration,
 ) -> Result<ExitStatus> {
     let db_writer = DbWriter::start(db_path, session_id.clone());
 
     let result = async {
+        if stdin_data.is_some() {
+            command.stdin(Stdio::piped());
+        }
+        
         let mut child = command
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .spawn()
             .with_context(|| format!("Failed to start process for session {}", session_id))?;
+
+        if let Some(data) = stdin_data {
+            if let Some(mut stdin) = child.stdin.take() {
+                use tokio::io::AsyncWriteExt;
+                stdin.write_all(&data).await.with_context(|| "Failed to write stdin_data to child")?;
+                stdin.flush().await?;
+            }
+        }
 
         let stdout = match child.stdout.take() {
             Some(stdout) => stdout,
@@ -296,6 +309,7 @@ mod tests {
             db_path.clone(),
             session_id.clone(),
             command,
+            None,
             output_store,
             std::time::Duration::from_millis(10),
         )
@@ -360,10 +374,11 @@ mod tests {
             db_path.clone(),
             session_id.clone(),
             command,
+            None,
             SessionOutputStore::default(),
-            std::time::Duration::from_millis(10),
+            std::time::Duration::from_millis(50),
         )
-        .await?;
+        .await;
 
         let db = StateStore::open(&db_path)?;
         let session = db

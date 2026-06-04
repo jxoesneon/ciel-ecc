@@ -57,11 +57,10 @@ pub async fn run(db: StateStore, cfg: Config) -> Result<()> {
                     continue;
                 }
 
-                if dashboard.is_pane_command_mode() {
-                    if dashboard.handle_pane_command_key(key) {
+                if dashboard.is_pane_command_mode()
+                    && dashboard.handle_pane_command_key(key) {
                         continue;
                     }
-                }
 
                 match (key.modifiers, key.code) {
                     (KeyModifiers::CONTROL, KeyCode::Char('c')) => break,

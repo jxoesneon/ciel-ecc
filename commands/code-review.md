@@ -203,18 +203,6 @@ Create review artifact at `.claude/reviews/pr-<NUMBER>-review.md` unless the rep
 
 ## Findings
 
-### CRITICAL
-<findings or "None">
-
-### HIGH
-<findings or "None">
-
-### MEDIUM
-<findings or "None">
-
-### LOW
-<findings or "None">
-
 ## Validation Results
 
 | Check | Result |

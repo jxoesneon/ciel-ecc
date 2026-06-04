@@ -1,3 +1,3 @@
 pub mod app;
-mod dashboard;
+pub mod dashboard;
 mod widgets;

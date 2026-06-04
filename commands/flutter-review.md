@@ -6,6 +6,10 @@ description: Review Flutter/Dart code for idiomatic patterns, widget best practi
 
 This command invokes the **flutter-reviewer** agent to review Flutter/Dart code changes.
 
+## Workflow
+
+*Note: This command defines the execution workflow. It delegates expertise and review priorities (CRITICAL/HIGH/MEDIUM) to the **flutter-reviewer** agent.*
+
 ## What This Command Does
 
 1. **Gather Context**: Review `git diff --staged` and `git diff`

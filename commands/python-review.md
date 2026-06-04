@@ -6,6 +6,10 @@ description: Comprehensive Python code review for PEP 8 compliance, type hints, 
 
 This command invokes the **python-reviewer** agent for comprehensive Python-specific code review.
 
+## Workflow
+
+*Note: This command defines the execution workflow. It delegates expertise and review priorities (CRITICAL/HIGH/MEDIUM) to the **python-reviewer** agent.*
+
 ## What This Command Does
 
 1. **Identify Python Changes**: Find modified `.py` files via `git diff`
@@ -23,34 +27,6 @@ Use `/python-review` when:
 - Reviewing pull requests with Python code
 - Onboarding to a new Python codebase
 - Learning Pythonic patterns and idioms
-
-## Review Categories
-
-### CRITICAL (Must Fix)
-- SQL/Command injection vulnerabilities
-- Unsafe eval/exec usage
-- Pickle unsafe deserialization
-- Hardcoded credentials
-- YAML unsafe load
-- Bare except clauses hiding errors
-
-### HIGH (Should Fix)
-- Missing type hints on public functions
-- Mutable default arguments
-- Swallowing exceptions silently
-- Not using context managers for resources
-- C-style looping instead of comprehensions
-- Using type() instead of isinstance()
-- Race conditions without locks
-
-### MEDIUM (Consider)
-- PEP 8 formatting violations
-- Missing docstrings on public functions
-- Print statements instead of logging
-- Inefficient string operations
-- Magic numbers without named constants
-- Not using f-strings for formatting
-- Unnecessary list creation
 
 ## Automated Checks Run
 

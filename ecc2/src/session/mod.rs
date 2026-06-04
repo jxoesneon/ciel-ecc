@@ -28,6 +28,7 @@ pub enum HarnessKind {
     Zed,
     FactoryDroid,
     Windsurf,
+    LlmLayer,
 }
 
 impl HarnessKind {
@@ -43,6 +44,7 @@ impl HarnessKind {
             "zed" => Self::Zed,
             "factory-droid" | "factory_droid" | "factorydroid" => Self::FactoryDroid,
             "windsurf" => Self::Windsurf,
+            "llm" | "llm-layer" => Self::LlmLayer,
             _ => Self::Unknown,
         }
     }
@@ -59,6 +61,7 @@ impl HarnessKind {
             "zed" => Self::Zed,
             "factory_droid" => Self::FactoryDroid,
             "windsurf" => Self::Windsurf,
+            "llm" => Self::LlmLayer,
             _ => Self::Unknown,
         }
     }
@@ -76,6 +79,7 @@ impl HarnessKind {
             Self::Zed => "zed",
             Self::FactoryDroid => "factory_droid",
             Self::Windsurf => "windsurf",
+            Self::LlmLayer => "llm",
         }
     }
 
@@ -89,7 +93,7 @@ impl HarnessKind {
     fn supports_direct_execution(self) -> bool {
         matches!(
             self,
-            Self::Claude | Self::Codex | Self::OpenCode | Self::Gemini
+            Self::Claude | Self::Codex | Self::OpenCode | Self::Gemini | Self::LlmLayer
         )
     }
 
@@ -105,6 +109,7 @@ impl HarnessKind {
             Self::Zed => &[".zed"],
             Self::FactoryDroid => &[".factory-droid", ".factory_droid"],
             Self::Windsurf => &[".windsurf"],
+            Self::LlmLayer => &[".llm"],
             Self::Unknown => &[],
         }
     }
@@ -622,18 +627,15 @@ pub struct ContextGraphRecallEntry {
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 #[serde(rename_all = "snake_case")]
+#[derive(Default)]
 pub enum ContextObservationPriority {
     Low,
+    #[default]
     Normal,
     High,
     Critical,
 }
 
-impl Default for ContextObservationPriority {
-    fn default() -> Self {
-        Self::Normal
-    }
-}
 
 impl fmt::Display for ContextObservationPriority {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

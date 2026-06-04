@@ -36,7 +36,9 @@ pub struct BudgetAlertThresholds {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[derive(Default)]
 pub enum ConflictResolutionStrategy {
+    #[default]
     Escalate,
     LastWriteWins,
     Merge,
@@ -52,6 +54,7 @@ pub struct ConflictResolutionConfig {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(default)]
+#[derive(Default)]
 pub struct ComputerUseDispatchConfig {
     pub agent: Option<String>,
     pub profile: Option<String>,
@@ -731,11 +734,6 @@ impl Default for BudgetAlertThresholds {
     }
 }
 
-impl Default for ConflictResolutionStrategy {
-    fn default() -> Self {
-        Self::Escalate
-    }
-}
 
 impl Default for ConflictResolutionConfig {
     fn default() -> Self {
@@ -803,17 +801,6 @@ impl Default for HarnessRunnerConfig {
     }
 }
 
-impl Default for ComputerUseDispatchConfig {
-    fn default() -> Self {
-        Self {
-            agent: None,
-            profile: None,
-            use_worktree: false,
-            project: None,
-            task_group: None,
-        }
-    }
-}
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ResolvedComputerUseDispatchConfig {

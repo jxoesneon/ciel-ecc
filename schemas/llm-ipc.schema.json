@@ -1,0 +1,105 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "LLM IPC Contract",
+  "description": "Formal communication contract between ECC2 Rust orchestrator and Python LLM layer",
+  "type": "object",
+  "oneOf": [
+    {
+      "required": ["type", "input"],
+      "properties": {
+        "type": { "const": "request" },
+        "input": { "$ref": "#/definitions/LLMInput" }
+      }
+    },
+    {
+      "required": ["type", "output"],
+      "properties": {
+        "type": { "const": "response" },
+        "output": { "$ref": "#/definitions/LLMOutput" }
+      }
+    },
+    {
+      "required": ["type", "error"],
+      "properties": {
+        "type": { "const": "error" },
+        "error": { "type": "string" }
+      }
+    }
+  ],
+  "definitions": {
+    "Role": {
+      "type": "string",
+      "enum": ["system", "user", "assistant", "tool"]
+    },
+    "ToolCall": {
+      "type": "object",
+      "required": ["id", "name", "arguments"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "arguments": { "type": "object" }
+      }
+    },
+    "Message": {
+      "type": "object",
+      "required": ["role", "content"],
+      "properties": {
+        "role": { "$ref": "#/definitions/Role" },
+        "content": { "type": "string" },
+        "name": { "type": "string" },
+        "tool_call_id": { "type": "string" },
+        "tool_calls": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/ToolCall" }
+        }
+      }
+    },
+    "ToolDefinition": {
+      "type": "object",
+      "required": ["name", "description", "parameters"],
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "parameters": { "type": "object" },
+        "strict": { "type": "boolean", "default": true }
+      }
+    },
+    "LLMInput": {
+      "type": "object",
+      "required": ["messages"],
+      "properties": {
+        "messages": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Message" }
+        },
+        "model": { "type": "string" },
+        "temperature": { "type": "number", "default": 1.0 },
+        "max_tokens": { "type": "integer" },
+        "tools": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/ToolDefinition" }
+        },
+        "stream": { "type": "boolean", "default": false },
+        "metadata": { "type": "object" }
+      }
+    },
+    "LLMOutput": {
+      "type": "object",
+      "required": ["content"],
+      "properties": {
+        "content": { "type": "string" },
+        "tool_calls": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/ToolCall" }
+        },
+        "model": { "type": "string" },
+        "usage": {
+          "type": "object",
+          "additionalProperties": { "type": "integer" }
+        },
+        "stop_reason": { "type": "string" },
+        "metadata": { "type": "object" }
+      }
+    }
+  }
+}

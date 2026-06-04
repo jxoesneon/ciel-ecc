@@ -6,6 +6,10 @@ description: Comprehensive Rust code review for ownership, lifetimes, error hand
 
 This command invokes the **rust-reviewer** agent for comprehensive Rust-specific code review.
 
+## Workflow
+
+*Note: This command defines the execution workflow. It delegates expertise and review priorities (CRITICAL/HIGH/MEDIUM) to the **rust-reviewer** agent.*
+
 ## What This Command Does
 
 1. **Verify Automated Checks**: Run `cargo check`, `cargo clippy -- -D warnings`, `cargo fmt --check`, and `cargo test` — stop if any fail
@@ -23,31 +27,6 @@ Use `/rust-review` when:
 - Reviewing pull requests with Rust code
 - Onboarding to a new Rust codebase
 - Learning idiomatic Rust patterns
-
-## Review Categories
-
-### CRITICAL (Must Fix)
-- Unchecked `unwrap()`/`expect()` in production code paths
-- `unsafe` without `// SAFETY:` comment documenting invariants
-- SQL injection via string interpolation in queries
-- Command injection via unvalidated input in `std::process::Command`
-- Hardcoded credentials
-- Use-after-free via raw pointers
-
-### HIGH (Should Fix)
-- Unnecessary `.clone()` to satisfy borrow checker
-- `String` parameter where `&str` or `impl AsRef<str>` suffices
-- Blocking in async context (`std::thread::sleep`, `std::fs`)
-- Missing `Send`/`Sync` bounds on shared types
-- Wildcard `_ =>` match on business-critical enums
-- Large functions (>50 lines)
-
-### MEDIUM (Consider)
-- Unnecessary allocation in hot paths
-- Missing `with_capacity` when size is known
-- Suppressed clippy warnings without justification
-- Public API without `///` documentation
-- Consider `#[must_use]` on non-`must_use` return types where ignoring values is likely a bug
 
 ## Automated Checks Run
 

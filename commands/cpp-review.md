@@ -6,6 +6,10 @@ description: Comprehensive C++ code review for memory safety, modern C++ idioms,
 
 This command invokes the **cpp-reviewer** agent for comprehensive C++-specific code review.
 
+## Workflow
+
+*Note: This command defines the execution workflow. It delegates expertise and review priorities (CRITICAL/HIGH/MEDIUM) to the **cpp-reviewer** agent.*
+
 ## What This Command Does
 
 1. **Identify C++ Changes**: Find modified `.cpp`, `.hpp`, `.cc`, `.h` files via `git diff`
@@ -23,30 +27,6 @@ Use `/cpp-review` when:
 - Reviewing pull requests with C++ code
 - Onboarding to a new C++ codebase
 - Checking for memory safety issues
-
-## Review Categories
-
-### CRITICAL (Must Fix)
-- Raw `new`/`delete` without RAII
-- Buffer overflows and use-after-free
-- Data races without synchronization
-- Command injection via `system()`
-- Uninitialized variable reads
-- Null pointer dereferences
-
-### HIGH (Should Fix)
-- Rule of Five violations
-- Missing `std::lock_guard` / `std::scoped_lock`
-- Detached threads without proper lifetime management
-- C-style casts instead of `static_cast`/`dynamic_cast`
-- Missing `const` correctness
-
-### MEDIUM (Consider)
-- Unnecessary copies (pass by value instead of `const&`)
-- Missing `reserve()` on known-size containers
-- `using namespace std;` in headers
-- Missing `[[nodiscard]]` on important return values
-- Overly complex template metaprogramming
 
 ## Automated Checks Run
 

@@ -6,6 +6,10 @@ description: Comprehensive React/JSX code review for hook correctness, render pe
 
 This command invokes the **react-reviewer** agent for React-specific code review. For pull requests touching `.tsx`/`.jsx` files, both `react-reviewer` and `typescript-reviewer` should run — each owns a distinct lane.
 
+## Workflow
+
+*Note: This command defines the execution workflow. It delegates expertise and review priorities (CRITICAL/HIGH/MEDIUM) to the **react-reviewer** agent.*
+
 ## What This Command Does
 
 1. **Identify React Changes**: Find modified `.tsx`/`.jsx` files (and React-containing `.ts`/`.js` files) via `git diff`
@@ -37,44 +41,6 @@ For pure `.ts`/`.js` changes with no React imports, use `/code-review` (general)
 | `/code-review` | Generic uncommitted-changes or PR review |
 
 On a TSX/JSX PR, invoke both `react-reviewer` and `typescript-reviewer`. Findings from each are non-overlapping by design.
-
-## Review Categories
-
-### CRITICAL (Must Fix)
-
-- `dangerouslySetInnerHTML` with unsanitized input
-- `href`/`src` with unvalidated user URLs (`javascript:`, `data:`)
-- Server Action without input validation
-- Secret in client bundle (`NEXT_PUBLIC_*`, `VITE_*`, `REACT_APP_*`)
-- `localStorage`/`sessionStorage` for session tokens
-- Conditional hook calls (violates Rules of Hooks)
-- Direct state mutation
-- Hook called outside a component or custom hook
-
-### HIGH (Should Fix)
-
-- Missing `useEffect`/`useMemo`/`useCallback` deps (disabled `exhaustive-deps` without justification)
-- Effect for derived state
-- Effect missing cleanup
-- Stale closures in handlers/intervals
-- Server-only imports in Client Components
-- Sensitive data leaked via props to Client Components
-- Server Actions without auth checks
-- Accessibility violations (missing labels, non-semantic interactive elements, ARIA misuse)
-- `key={index}` in dynamic lists
-- Duplicated state, useEffect chains
-
-### MEDIUM (Consider)
-
-- Over-memoization without measured win
-- Inline new object/function as prop to memoized child
-- Suspense at route root only (no progressive reveal)
-- Long lists without virtualization
-- High-frequency value via `useContext`
-- Roll-your-own validation in non-trivial forms
-- Prop drilling beyond 3 levels
-- Component over 200 lines
-- Class components in new code
 
 ## Automated Checks Run
 

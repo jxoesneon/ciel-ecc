@@ -392,7 +392,7 @@ fn create_remote_dispatch_request_inner(
         .project
         .as_deref()
         .and_then(normalize_group_label)
-        .unwrap_or_else(|| default_project_label(&working_dir));
+        .unwrap_or_else(|| default_project_label(working_dir));
     let task_group = grouping
         .task_group
         .as_deref()
@@ -415,7 +415,7 @@ fn create_remote_dispatch_request_inner(
         priority,
         &agent_type,
         profile_name,
-        &working_dir,
+        working_dir,
         &project,
         &task_group,
         use_worktree,
@@ -494,7 +494,7 @@ async fn run_remote_dispatch_requests_with_runner_program(
                 &request.agent_type,
                 request.use_worktree,
                 &request.working_dir,
-                &runner_program,
+                runner_program,
                 request.profile_name.as_deref(),
                 grouping,
             )
@@ -545,7 +545,7 @@ async fn run_remote_dispatch_requests_with_runner_program(
                 &request.agent_type,
                 request.use_worktree,
                 &request.working_dir,
-                &runner_program,
+                runner_program,
                 request.profile_name.as_deref(),
                 None,
                 grouping,
@@ -2342,6 +2342,7 @@ fn agent_program(cfg: &Config, agent_type: &str) -> Result<PathBuf> {
         HarnessKind::Codex => Ok(PathBuf::from("codex")),
         HarnessKind::OpenCode => Ok(PathBuf::from("opencode")),
         HarnessKind::Gemini => Ok(PathBuf::from("gemini")),
+        HarnessKind::LlmLayer => Ok(std::env::current_dir()?.join("src/llm/cli/ipc.py")),
         other => anyhow::bail!("Unsupported agent type: {other}"),
     }
 }
@@ -2412,10 +2413,34 @@ pub async fn run_session(
         working_dir,
         profile.as_ref(),
     );
+    let harness = HarnessKind::from_agent_type(agent_type);
+    let stdin_data = if harness == HarnessKind::LlmLayer {
+        let input = crate::comms::llm_ipc::LLMInput {
+            messages: vec![crate::comms::llm_ipc::Message {
+                role: crate::comms::llm_ipc::Role::User,
+                content: task.to_string(),
+                name: None,
+                tool_call_id: None,
+                tool_calls: None,
+            }],
+            model: profile.as_ref().and_then(|p| p.model.clone()),
+            temperature: 1.0,
+            max_tokens: None,
+            tools: None,
+            stream: false,
+            metadata: None,
+        };
+        let msg = crate::comms::llm_ipc::IpcMessage::Request { input };
+        serde_json::to_vec(&msg).ok()
+    } else {
+        None
+    };
+
     capture_command_output(
         cfg.db_path.clone(),
         session_id.to_string(),
         command,
+        stdin_data,
         SessionOutputStore::default(),
         std::time::Duration::from_secs(cfg.heartbeat_interval_secs),
     )
@@ -2603,7 +2628,7 @@ async fn queue_session_with_resolved_profile_and_runner_program(
     let session = build_session_record(
         db,
         task,
-        &effective_agent_type,
+        effective_agent_type,
         use_worktree,
         cfg,
         repo_root,

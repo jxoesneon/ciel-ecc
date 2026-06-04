@@ -118,23 +118,6 @@ You DO NOT refactor or rewrite code — you report findings only.
 - **Component over 200 lines**: Extract subcomponents or a custom hook.
 - **Class component in new code**: Convert to function component when modifying.
 
-## Diagnostic Commands
-
-```bash
-# Required
-npx eslint . --ext .tsx,.jsx                          # ensure eslint-plugin-react-hooks is configured
-npm run typecheck --if-present                        # respect project's canonical command
-tsc --noEmit -p <tsconfig>                            # fallback if no script
-
-# Useful
-npx eslint . --ext .tsx,.jsx --rule 'react-hooks/exhaustive-deps: error'
-npx eslint . --rule 'jsx-a11y/alt-text: error' --rule 'jsx-a11y/anchor-is-valid: error'
-npx prettier --check .
-npm audit                                             # supply-chain advisories
-```
-
-If `eslint-plugin-react-hooks` or `eslint-plugin-jsx-a11y` is not in the project, recommend installing during the review.
-
 ## Approval Criteria
 
 - **Approve**: No CRITICAL or HIGH issues

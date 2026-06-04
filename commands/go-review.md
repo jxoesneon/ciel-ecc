@@ -6,6 +6,10 @@ description: Comprehensive Go code review for idiomatic patterns, concurrency sa
 
 This command invokes the **go-reviewer** agent for comprehensive Go-specific code review.
 
+## Workflow
+
+*Note: This command defines the execution workflow. It delegates expertise and review priorities (CRITICAL/HIGH/MEDIUM) to the **go-reviewer** agent.*
+
 ## What This Command Does
 
 1. **Identify Go Changes**: Find modified `.go` files via `git diff`
@@ -23,31 +27,6 @@ Use `/go-review` when:
 - Reviewing pull requests with Go code
 - Onboarding to a new Go codebase
 - Learning idiomatic Go patterns
-
-## Review Categories
-
-### CRITICAL (Must Fix)
-- SQL/Command injection vulnerabilities
-- Race conditions without synchronization
-- Goroutine leaks
-- Hardcoded credentials
-- Unsafe pointer usage
-- Ignored errors in critical paths
-
-### HIGH (Should Fix)
-- Missing error wrapping with context
-- Panic instead of error returns
-- Context not propagated
-- Unbuffered channels causing deadlocks
-- Interface not satisfied errors
-- Missing mutex protection
-
-### MEDIUM (Consider)
-- Non-idiomatic code patterns
-- Missing godoc comments on exports
-- Inefficient string concatenation
-- Slice not preallocated
-- Table-driven tests not used
 
 ## Automated Checks Run
 
