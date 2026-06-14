@@ -2,6 +2,11 @@
 
 Advanced execution and coordination skills for Ciel.
 
+## Core Mandates
+
+- **Orchestration**: All skill interactions must follow the ratified [INTEROPERABILITY.md](./INTEROPERABILITY.md) contract.
+- **Discipline**: Use `fable-mode` for complex tasks (Plan -> Delegate -> Verify -> Critique).
+
 ## Installation & Setup
 
 1. This directory is a standalone GitHub repository: `jxoesneon/ciel-ecc`.
