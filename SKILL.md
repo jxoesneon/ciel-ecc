@@ -10,6 +10,15 @@ description: >
 This skill set provides advanced procedural frameworks for handling high-complexity
 engineering and research tasks within the Ciel environment.
 
+## Automated Core Tools
+
+The following Python-based tools implement the [2026 Master Spec](./SPEC_2026.md):
+
+- **core/fsm.py**: Deterministic state-machine tracking.
+- **core/governor.py**: Metacognitive drift detection.
+- **core/sanitizer.py**: Output sanitization for untrusted data.
+- **core/orchestrator.py**: Master integration layer.
+
 ## Included Skills
 
 - **fable-mode**: Enforces staged execution discipline (plan, delegate, verify, critique).
