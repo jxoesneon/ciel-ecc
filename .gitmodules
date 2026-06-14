@@ -1,0 +1,3 @@
+[submodule "fable-mode"]
+	path = fable-mode
+	url = https://github.com/mrtooher/fable-mode
