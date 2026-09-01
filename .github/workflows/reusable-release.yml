@@ -41,14 +41,14 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
           ref: ${{ inputs.tag }}
           persist-credentials: false
 
       - name: Setup Node.js
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        uses: actions/setup-node@v7.0.0
         with:
           node-version: '20.x'
           registry-url: 'https://registry.npmjs.org'
@@ -148,13 +148,13 @@ jobs:
           name: ecc-release-artifacts
 
       - name: Setup Node.js
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        uses: actions/setup-node@v7.0.0
         with:
           node-version: '20.x'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
+        uses: softprops/action-gh-release@v3.0.2
         with:
           tag_name: ${{ inputs.tag }}
           body_path: release_body.md
