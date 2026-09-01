@@ -45,14 +45,11 @@ function stableStringify(value, depth = 0) {
  */
 function hashToolCall(toolName, toolInput) {
   const name = String(toolName || '');
-  let key = '';
-  if (name === 'Bash') {
-    key = String(toolInput?.command || '').slice(0, 160);
-  } else if (toolInput?.file_path) {
-    key = String(toolInput.file_path);
-  } else {
-    key = stableStringify(toolInput || {}).slice(0, HASH_INPUT_LIMIT);
-  }
+  const key = name === 'Bash'
+    ? String(toolInput?.command || '').slice(0, 160)
+    : toolInput?.file_path
+      ? String(toolInput.file_path)
+      : stableStringify(toolInput || {}).slice(0, HASH_INPUT_LIMIT);
   return crypto.createHash('sha256').update(`${name}:${key}`).digest('hex').slice(0, 8);
 }
 

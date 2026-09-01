@@ -91,7 +91,9 @@ Use the consult command:
 It returns matching components, related profiles, and preview/install commands.
 
 ### Pick one path only
-**Recommended default:** install the Claude Code plugin. **Do not stack install methods.** If you choose this path, stop there. Do not also run `/plugin install`.
+**Recommended default:** install the Claude Code plugin via the marketplace (`/plugin install ecc@ecc`).
+
+**Do not stack install methods.** If you choose the `/plugin install` path, stop there; do not run the full installer with `--profile full`. After installing, use the short command namespace like `/ecc:plan`.
 
 ### Low-context / no-hooks path
 Minimal profiles:
@@ -99,6 +101,16 @@ Minimal profiles:
 - `npx ecc-install --profile minimal --target claude`
 - `--profile core --without baseline:hooks --target claude`
 This profile intentionally excludes `hooks-runtime`.
+
+### Releases & Hermes Setup
+- Setup guide: [Hermes Setup](docs/HERMES-SETUP.md)
+- Release notes: [2.0.0-rc.1 Release Notes](docs/releases/2.0.0-rc.1/release-notes.md)
+
+### GitHub Copilot & Prompts
+Configure `.vscode/settings.json` with `"chat.promptFiles": true` to enable `.github/prompts/` slash commands (/plan, /tdd, /code-review).
+
+### MCP Management
+Use `/mcp` for Claude Code runtime disables; Claude Code persists those choices in `~/.claude.json`. `ECC_DISABLED_MCPS` is an ECC install/sync filter, not a live Claude Code toggle.
 
 ### Reset / Uninstall ECC
 To cleanup:
@@ -118,4 +130,3 @@ Start with `rules/common` plus one language or framework pack you actually use. 
 - `bash ./install.sh --target claude --modules hooks-runtime`
 - `pwsh -File .\install.ps1 --target claude --modules hooks-runtime`
 Note: Claude config root on Windows is `%USERPROFILE%\\.claude`.
-

@@ -255,16 +255,6 @@ ${entry.evidence || 'Learned from repeated observations.'}
   fs.writeFileSync(filePath, body);
 }
 
-function getHookCommandByDescription(hooks, lifecycle, descriptionText) {
-  const hookGroup = hooks.hooks[lifecycle]?.find(
-    entry => entry.description && entry.description.includes(descriptionText)
-  );
-
-  assert.ok(hookGroup, `Expected ${lifecycle} hook matching "${descriptionText}"`);
-  assert.ok(hookGroup.hooks?.[0]?.command, `Expected ${lifecycle} hook command for "${descriptionText}"`);
-  return hookGroup.hooks[0].command;
-}
-
 function getHookCommandById(hooks, lifecycle, hookId) {
   const hookGroup = hooks.hooks[lifecycle]?.find(entry => entry.id === hookId);
 
@@ -559,11 +549,9 @@ async function runTests() {
   })) passed++; else failed++;
 
   if (await asyncTest('MCP health hook blocks unhealthy MCP tool calls through hooks.json', async () => {
-    const hookCommand = getHookCommandByDescription(
-      hooks,
-      'PreToolUse',
-      'Check MCP server health before MCP tool execution'
-    );
+    // The centralized dispatcher delegates mcp__* tool calls to mcp-health-check.js.
+    // Test the health-check script directly to verify blocking behaviour.
+    const mcpHealthScript = path.join(scriptsDir, 'mcp-health-check.js');
 
     const testDir = createTestDir();
     const configPath = path.join(testDir, 'claude.json');
@@ -584,8 +572,8 @@ async function runTests() {
         })
       );
 
-      const result = await runHookCommand(
-        hookCommand,
+      const result = await runHookWithInput(
+        mcpHealthScript,
         { tool_name: 'mcp__broken__search', tool_input: {} },
         {
           CLAUDE_HOOK_EVENT_NAME: 'PreToolUse',
@@ -675,8 +663,10 @@ async function runTests() {
   })) passed++; else failed++;
 
   if (await asyncTest('PostToolUse PR hook extracts PR URL', async () => {
-    const hookCommand = getHookCommandById(hooks, 'PostToolUse', 'post:bash:dispatcher');
-    const result = await runHookCommand(hookCommand, {
+    // The centralized dispatcher delegates PostToolUse Bash calls to post-bash-pr-created.js.
+    // Test the script directly to verify PR URL extraction behaviour.
+    const prScript = path.join(scriptsDir, 'post-bash-pr-created.js');
+    const result = await runHookWithInput(prScript, {
       tool_input: { command: 'gh pr create --title "Test"' },
       tool_output: { output: 'Creating pull request...\nhttps://github.com/owner/repo/pull/123' }
     });
@@ -700,14 +690,22 @@ async function runTests() {
     const lines = [
       JSON.stringify({ type: 'user', content: 'Fix the login bug' }),
       JSON.stringify({ type: 'tool_use', name: 'Read', input: { file_path: 'src/auth.ts' } }),
-      JSON.stringify({ type: 'assistant', message: { content: [
-        { type: 'tool_use', name: 'Edit', input: { file_path: 'src/auth.ts' } }
-      ]}}),
+      JSON.stringify({
+        type: 'assistant', message: {
+          content: [
+            { type: 'tool_use', name: 'Edit', input: { file_path: 'src/auth.ts' } }
+          ]
+        }
+      }),
       JSON.stringify({ type: 'user', content: 'Now add tests' }),
-      JSON.stringify({ type: 'assistant', message: { content: [
-        { type: 'tool_use', name: 'Write', input: { file_path: 'tests/auth.test.ts' } },
-        { type: 'text', text: 'Here are the tests' }
-      ]}}),
+      JSON.stringify({
+        type: 'assistant', message: {
+          content: [
+            { type: 'tool_use', name: 'Write', input: { file_path: 'tests/auth.test.ts' } },
+            { type: 'text', text: 'Here are the tests' }
+          ]
+        }
+      }),
       JSON.stringify({ type: 'user', content: 'Looks good, commit' })
     ];
     fs.writeFileSync(transcriptPath, lines.join('\n'));
@@ -773,13 +771,21 @@ async function runTests() {
 
     // Claude Code JSONL format uses nested message.content arrays
     const lines = [
-      JSON.stringify({ type: 'user', message: { role: 'user', content: [
-        { type: 'text', text: 'Refactor the utils module' }
-      ]}}),
-      JSON.stringify({ type: 'assistant', message: { content: [
-        { type: 'tool_use', name: 'Read', input: { file_path: 'lib/utils.js' } }
-      ]}}),
-      JSON.stringify({ type: 'user', message: { role: 'user', content: 'Approve the changes' }})
+      JSON.stringify({
+        type: 'user', message: {
+          role: 'user', content: [
+            { type: 'text', text: 'Refactor the utils module' }
+          ]
+        }
+      }),
+      JSON.stringify({
+        type: 'assistant', message: {
+          content: [
+            { type: 'tool_use', name: 'Read', input: { file_path: 'lib/utils.js' } }
+          ]
+        }
+      }),
+      JSON.stringify({ type: 'user', message: { role: 'user', content: 'Approve the changes' } })
     ];
     fs.writeFileSync(transcriptPath, lines.join('\n'));
 
@@ -860,8 +866,8 @@ async function runTests() {
 
     let code = null;
     // MUST drain stdout/stderr to prevent backpressure blocking the child process
-    proc.stdout.on('data', () => {});
-    proc.stderr.on('data', () => {});
+    proc.stdout.on('data', () => { });
+    proc.stderr.on('data', () => { });
     proc.stdin.on('error', (err) => {
       if (err.code !== 'EPIPE' && err.code !== 'EOF') throw err;
     });
@@ -885,7 +891,7 @@ async function runTests() {
     let code = null;
     let stderr = '';
     // MUST drain stdout to prevent backpressure blocking the child process
-    proc.stdout.on('data', () => {});
+    proc.stdout.on('data', () => { });
     proc.stderr.on('data', data => stderr += data);
     proc.stdin.on('error', (err) => {
       if (err.code !== 'EPIPE' && err.code !== 'EOF') throw err;

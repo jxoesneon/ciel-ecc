@@ -29,54 +29,11 @@ get_trae_dir() {
     fi
 }
 
-ensure_manifest_entry() {
-    local manifest="$1"
-    local entry="$2"
-
-    touch "$manifest"
-    if ! grep -Fqx "$entry" "$manifest"; then
-        echo "$entry" >> "$manifest"
-    fi
-}
-
-manifest_has_entry() {
-    local manifest="$1"
-    local entry="$2"
-
-    [ -f "$manifest" ] && grep -Fqx "$entry" "$manifest"
-}
-
-copy_managed_file() {
-    local source_path="$1"
-    local target_path="$2"
-    local manifest="$3"
-    local manifest_entry="$4"
-    local make_executable="${5:-0}"
-
-    local already_managed=0
-    if manifest_has_entry "$manifest" "$manifest_entry"; then
-        already_managed=1
-    fi
-
-    if [ -f "$target_path" ]; then
-        if [ "$already_managed" -eq 1 ]; then
-            ensure_manifest_entry "$manifest" "$manifest_entry"
-        fi
-        return 1
-    fi
-
-    cp "$source_path" "$target_path"
-    if [ "$make_executable" -eq 1 ]; then
-        chmod +x "$target_path"
-    fi
-    ensure_manifest_entry "$manifest" "$manifest_entry"
-    return 0
-}
-
 # Install function
 do_install() {
     local target_dir="$PWD"
     local trae_dir="$(get_trae_dir)"
+    local commands=0 agents=0 skills=0 rules=0 other=0
 
     # Check if ~ was specified (or expanded to $HOME)
     if [ "$#" -ge 1 ]; then
@@ -114,102 +71,93 @@ do_install() {
 
     # Manifest file to track installed files
     MANIFEST="$trae_full_path/.ecc-manifest"
-    touch "$MANIFEST"
 
-    # Counters for summary
-    commands=0
-    agents=0
-    skills=0
-    rules=0
-    other=0
+    python3 -c '
+import os, sys, shutil
 
-    # Copy commands from repo root
-    if [ -d "$REPO_ROOT/commands" ]; then
-        for f in "$REPO_ROOT/commands"/*.md; do
-            [ -f "$f" ] || continue
-            local_name=$(basename "$f")
-            target_path="$trae_full_path/commands/$local_name"
-            if copy_managed_file "$f" "$target_path" "$MANIFEST" "commands/$local_name"; then
-                commands=$((commands + 1))
-            fi
-        done
-    fi
+repo_root = os.path.realpath(sys.argv[1])
+script_dir = os.path.realpath(sys.argv[2])
+trae_full = os.path.realpath(sys.argv[3])
 
-    # Copy agents from repo root
-    if [ -d "$REPO_ROOT/agents" ]; then
-        for f in "$REPO_ROOT/agents"/*.md; do
-            [ -f "$f" ] || continue
-            local_name=$(basename "$f")
-            target_path="$trae_full_path/agents/$local_name"
-            if copy_managed_file "$f" "$target_path" "$MANIFEST" "agents/$local_name"; then
-                agents=$((agents + 1))
-            fi
-        done
-    fi
+manifest_file = os.path.join(trae_full, ".ecc-manifest")
+existing_manifest = set()
+if os.path.exists(manifest_file):
+    with open(manifest_file, "r", encoding="utf-8") as f:
+        existing_manifest = set(line.strip() for line in f if line.strip())
 
-    # Copy skills from repo root (if available)
-    if [ -d "$REPO_ROOT/skills" ]; then
-        for d in "$REPO_ROOT/skills"/*/; do
-            [ -d "$d" ] || continue
-            skill_name="$(basename "$d")"
-            target_skill_dir="$trae_full_path/skills/$skill_name"
-            skill_copied=0
+new_manifest = set(existing_manifest)
 
-            while IFS= read -r source_file; do
-                relative_path="${source_file#$d}"
-                target_path="$target_skill_dir/$relative_path"
+def copy_file(src, rel_dest, is_exec=False):
+    dst = os.path.join(trae_full, rel_dest)
+    dest_exists = os.path.exists(dst)
+    if dest_exists and rel_dest not in existing_manifest:
+        return False
+    os.makedirs(os.path.dirname(dst), exist_ok=True)
+    shutil.copy2(src, dst)
+    if is_exec:
+        try:
+            os.chmod(dst, 0o755)
+        except OSError:
+            pass
+    new_manifest.add(rel_dest)
+    return True
 
-                mkdir -p "$(dirname "$target_path")"
-                if copy_managed_file "$source_file" "$target_path" "$MANIFEST" "skills/$skill_name/$relative_path"; then
-                    skill_copied=1
-                fi
-            done < <(find "$d" -type f | sort)
+# Commands
+cmd_dir = os.path.join(repo_root, "commands")
+if os.path.isdir(cmd_dir):
+    for f in os.listdir(cmd_dir):
+        if f.endswith(".md"):
+            copy_file(os.path.join(cmd_dir, f), os.path.join("commands", f))
 
-            if [ "$skill_copied" -eq 1 ]; then
-                skills=$((skills + 1))
-            fi
-        done
-    fi
+# Agents
+agent_dir = os.path.join(repo_root, "agents")
+if os.path.isdir(agent_dir):
+    for f in os.listdir(agent_dir):
+        if f.endswith(".md"):
+            copy_file(os.path.join(agent_dir, f), os.path.join("agents", f))
 
-    # Copy rules from repo root
-    if [ -d "$REPO_ROOT/rules" ]; then
-        while IFS= read -r rule_file; do
-            relative_path="${rule_file#$REPO_ROOT/rules/}"
-            target_path="$trae_full_path/rules/$relative_path"
+# Skills
+skill_dir = os.path.join(repo_root, "skills")
+if os.path.isdir(skill_dir):
+    for root, _, files in os.walk(skill_dir):
+        for f in files:
+            src = os.path.join(root, f)
+            rel = os.path.relpath(src, repo_root)
+            copy_file(src, rel)
 
-            mkdir -p "$(dirname "$target_path")"
-            if copy_managed_file "$rule_file" "$target_path" "$MANIFEST" "rules/$relative_path"; then
-                rules=$((rules + 1))
-            fi
-        done < <(find "$REPO_ROOT/rules" -type f | sort)
-    fi
+# Rules
+rules_dir = os.path.join(repo_root, "rules")
+if os.path.isdir(rules_dir):
+    for root, _, files in os.walk(rules_dir):
+        for f in files:
+            src = os.path.join(root, f)
+            rel = os.path.relpath(src, repo_root)
+            copy_file(src, rel)
 
-    # Copy README files from this directory
-    for readme_file in "$SCRIPT_DIR/README.md" "$SCRIPT_DIR/README.zh-CN.md"; do
-        if [ -f "$readme_file" ]; then
-            local_name=$(basename "$readme_file")
-            target_path="$trae_full_path/$local_name"
-            if copy_managed_file "$readme_file" "$target_path" "$MANIFEST" "$local_name"; then
-                other=$((other + 1))
-            fi
-        fi
-    done
+# Readmes and scripts
+for name in ["README.md", "README.zh-CN.md"]:
+    src = os.path.join(script_dir, name)
+    if os.path.exists(src):
+        copy_file(src, name)
 
-    # Copy install and uninstall scripts
-    for script_file in "$SCRIPT_DIR/install.sh" "$SCRIPT_DIR/uninstall.sh"; do
-        if [ -f "$script_file" ]; then
-            local_name=$(basename "$script_file")
-            target_path="$trae_full_path/$local_name"
-            if copy_managed_file "$script_file" "$target_path" "$MANIFEST" "$local_name" 1; then
-                other=$((other + 1))
-            fi
-        fi
-    done
+for name in ["install.sh", "uninstall.sh"]:
+    src = os.path.join(script_dir, name)
+    if os.path.exists(src):
+        copy_file(src, name, is_exec=True)
 
-    # Add manifest file itself to manifest
-    ensure_manifest_entry "$MANIFEST" ".ecc-manifest"
+new_manifest.add(".ecc-manifest")
+
+with open(manifest_file, "w", encoding="utf-8") as f:
+    for entry in sorted(new_manifest):
+        f.write(entry + "\n")
+' "$REPO_ROOT" "$SCRIPT_DIR" "$trae_full_path"
 
     # Installation summary
+    commands=$(find "$trae_full_path/commands" -name "*.md" 2>/dev/null | wc -l | tr -d ' ')
+    agents=$(find "$trae_full_path/agents" -name "*.md" 2>/dev/null | wc -l | tr -d ' ')
+    skills=$(find "$trae_full_path/skills" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
+    rules=$(find "$trae_full_path/rules" -name "*.md" 2>/dev/null | wc -l | tr -d ' ')
+
     echo "Installation complete!"
     echo ""
     echo "Components installed:"

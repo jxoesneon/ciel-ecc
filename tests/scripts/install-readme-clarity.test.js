@@ -44,8 +44,8 @@ function runTests() {
       'README should explicitly warn against stacking install methods'
     );
     assert.ok(
-      readme.includes('If you choose this path, stop there. Do not also run `/plugin install`.'),
-      'README should tell manual-install users not to continue layering installs'
+      readme.includes('If you choose the `/plugin install` path, stop there; do not run the full installer with `--profile full`.'),
+      'README should tell plugin users not to continue layering installs'
     );
   })) passed++; else failed++;
 

@@ -48,7 +48,7 @@ function runGhJson(args, options = {}) {
   try {
     return JSON.parse(stdout || 'null');
   } catch (error) {
-    throw new Error(`gh ${args.join(' ')} returned invalid JSON: ${error.message}`);
+    throw new Error(`gh ${args.join(' ')} returned invalid JSON: ${error.message}`, { cause: error });
   }
 }
 
@@ -73,9 +73,9 @@ function discussionNeedsMaintainerTouch(discussion) {
 function discussionNeedsAcceptedAnswer(discussion) {
   return Boolean(
     discussion
-      && discussion.category
-      && discussion.category.isAnswerable
-      && !discussion.answer
+    && discussion.category
+    && discussion.category.isAnswerable
+    && !discussion.answer
   );
 }
 

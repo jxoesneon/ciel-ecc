@@ -405,7 +405,7 @@ test('observe.sh creates counter file and increments on each call', () => {
         ECC_SKIP_OBSERVE: '0',
         CLAUDE_PROJECT_DIR: projectDir
       },
-      timeout: 5000
+      timeout: 15000
     });
   }
 

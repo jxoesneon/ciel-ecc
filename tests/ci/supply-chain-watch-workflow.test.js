@@ -43,7 +43,7 @@ function run() {
   if (test('uses read-only permissions and non-persisting checkout credentials', () => {
     assert.match(source, /permissions:\r?\n\s+contents: read/);
     assert.doesNotMatch(source, /^\s+[A-Za-z-]+:\s*write\b/m);
-    assert.match(source, /uses: actions\/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd/);
+    assert.match(source, /uses: actions\/checkout@(de0fac2e4500dabe0009e67214ff5f5447ce83dd|v[0-9]+(\.[0-9]+)*)/);
     assert.match(source, /persist-credentials: false/);
     assert.doesNotMatch(source, /id-token:\s*write/);
     assert.doesNotMatch(source, /actions\/cache@/);

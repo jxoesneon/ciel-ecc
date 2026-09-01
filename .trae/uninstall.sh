@@ -111,83 +111,90 @@ do_uninstall() {
         exit 0
     fi
     
-    # Counters
-    removed=0
-    skipped=0
-    
-    # Read manifest and remove files
-    while IFS= read -r file_path; do
-        [ -z "$file_path" ] && continue
+    # Perform uninstallation via Python engine
+    python3 -c '
+import os, sys
 
-        if ! is_valid_manifest_entry "$file_path"; then
-            echo "Skipped: $file_path (invalid manifest entry)"
-            skipped=$((skipped + 1))
-            continue
-        fi
+trae_full = os.path.realpath(sys.argv[1])
+trae_dir = sys.argv[2]
+manifest_file = os.path.join(trae_full, ".ecc-manifest")
 
-        full_path="$trae_full_path/$file_path"
-        resolved_full="$(resolve_path "$full_path")"
+if not os.path.isdir(trae_full):
+    print("Uninstall complete!\n")
+    sys.exit(0)
 
-        case "$resolved_full" in
-            "$trae_root_resolved"|"$trae_root_resolved"/*)
-                ;;
-            *)
-                echo "Skipped: $file_path (invalid manifest entry)"
-                skipped=$((skipped + 1))
-                continue
-                ;;
-        esac
+if not os.path.exists(manifest_file):
+    sys.exit(0)
 
-        if [ -f "$resolved_full" ]; then
-            rm -f "$resolved_full"
-            echo "Removed: $file_path"
-            removed=$((removed + 1))
-        elif [ -d "$resolved_full" ]; then
-            # Only remove directory if it's empty
-            if [ -z "$(ls -A "$resolved_full" 2>/dev/null)" ]; then
-                rmdir "$resolved_full" 2>/dev/null || true
-                if [ ! -d "$resolved_full" ]; then
-                    echo "Removed: $file_path/"
-                    removed=$((removed + 1))
-                fi
-            else
-                echo "Skipped: $file_path/ (not empty - contains user files)"
-                skipped=$((skipped + 1))
-            fi
-        else
-            skipped=$((skipped + 1))
-        fi
-    done < "$MANIFEST"
+entries = []
+with open(manifest_file, "r", encoding="utf-8") as f:
+    for line in f:
+        e = line.strip()
+        if e and e != ".ecc-manifest":
+            entries.append(e)
 
-    while IFS= read -r empty_dir; do
-        [ "$empty_dir" = "$trae_full_path" ] && continue
-        relative_dir="${empty_dir#$trae_full_path/}"
-        rmdir "$empty_dir" 2>/dev/null || true
-        if [ ! -d "$empty_dir" ]; then
-            echo "Removed: $relative_dir/"
-            removed=$((removed + 1))
-        fi
-    done < <(find "$trae_full_path" -depth -type d -empty 2>/dev/null | sort -r)
-    
-    # Try to remove the main trae directory if it's empty
-    if [ -d "$trae_full_path" ] && [ -z "$(ls -A "$trae_full_path" 2>/dev/null)" ]; then
-        rmdir "$trae_full_path" 2>/dev/null || true
-        if [ ! -d "$trae_full_path" ]; then
-            echo "Removed: $trae_dir/"
-            removed=$((removed + 1))
-        fi
-    fi
-    
-    echo ""
-    echo "Uninstall complete!"
-    echo ""
-    echo "Summary:"
-    echo "  Removed: $removed items"
-    echo "  Skipped: $skipped items (not found or user-modified)"
-    echo ""
-    if [ -d "$trae_full_path" ]; then
-        echo "Note: $trae_dir directory still exists (contains user-added files)"
-    fi
+removed = 0
+skipped = 0
+
+for entry in entries:
+    if ".." in entry or entry.startswith("/") or entry.startswith("~"):
+        print(f"Skipped: {entry} (invalid manifest entry)")
+        skipped += 1
+        continue
+    full = os.path.join(trae_full, entry)
+    try:
+        real = os.path.realpath(full)
+    except Exception:
+        print(f"Skipped: {entry} (invalid manifest entry)")
+        skipped += 1
+        continue
+    if real != trae_full and not real.startswith(trae_full + os.sep):
+        print(f"Skipped: {entry} (invalid manifest entry)")
+        skipped += 1
+        continue
+    if os.path.isfile(real) or os.path.islink(real):
+        os.remove(real)
+        print(f"Removed: {entry}")
+        removed += 1
+    else:
+        skipped += 1
+
+if os.path.exists(manifest_file):
+    os.remove(manifest_file)
+    print("Removed: .ecc-manifest")
+    removed += 1
+
+# Clean up empty directories bottom-up
+for root, dirs, files in os.walk(trae_full, topdown=False):
+    for d in dirs:
+        dp = os.path.join(root, d)
+        try:
+            if not os.listdir(dp):
+                os.rmdir(dp)
+                rel = os.path.relpath(dp, trae_full)
+                print(f"Removed: {rel}/")
+                removed += 1
+        except OSError:
+            pass
+
+try:
+    if not os.listdir(trae_full):
+        os.rmdir(trae_full)
+        print(f"Removed: {trae_dir}/")
+        removed += 1
+except OSError:
+    pass
+
+print("")
+print("Uninstall complete!")
+print("")
+print("Summary:")
+print(f"  Removed: {removed} items")
+print(f"  Skipped: {skipped} items (not found or user-modified)")
+print("")
+if os.path.isdir(trae_full):
+    print(f"Note: {trae_dir} directory still exists (contains user-added files)")
+' "$trae_full_path" "$trae_dir"
 }
 
 # Execute uninstall

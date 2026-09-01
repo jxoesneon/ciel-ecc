@@ -220,7 +220,7 @@ function checkRegistry(registry, outputPath = DEFAULT_OUTPUT_PATH) {
   try {
     current = fs.readFileSync(outputPath, 'utf8');
   } catch (error) {
-    throw new Error(`Failed to read ${normalizePath(path.relative(ROOT, outputPath))}: ${error.message}`);
+    throw new Error(`Failed to read ${normalizePath(path.relative(ROOT, outputPath))}: ${error.message}`, { cause: error });
   }
 
   if (current !== expected) {
