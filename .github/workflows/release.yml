@@ -137,7 +137,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v3.0.2
+        uses: softprops/action-gh-release@v3.0.3
         with:
           body_path: release_body.md
           generate_release_notes: true
