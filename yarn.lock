@@ -322,12 +322,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:25.7.0":
-  version: 25.7.0
-  resolution: "@types/node@npm:25.7.0"
+"@types/node@npm:26.5.1":
+  version: 26.5.1
+  resolution: "@types/node@npm:26.5.1"
   dependencies:
-    undici-types: "npm:~7.21.0"
-  checksum: 10c0/47ec7eaca154c36ad6d1ac0270e6e254eedf20b9dc49afe3bc76e4f7eba29ceac705f8903b162aeaf40e3941101ffe76ffb374989359ea3ef8c8509d8b443f55
+    undici-types: "npm:~8.9.0"
+  checksum: 10c0/40aa7aa4c099c8a08bf39b5bcb15eaf2cc073666c2191b1d9ac8243ce6b68b23ace904a044c521f6d310b70e94514b531be5f4fc184f141a7ce7f0679ebc7bb3
   languageName: node
   linkType: hard
 
@@ -652,7 +652,7 @@ __metadata:
     "@eslint/js": "npm:^9.39.5"
     "@iarna/toml": "npm:^2.2.5"
     "@opencode-ai/plugin": "npm:^1.0.0"
-    "@types/node": "npm:25.7.0"
+    "@types/node": "npm:26.5.1"
     ajv: "npm:^8.20.0"
     c8: "npm:^11.0.0"
     eslint: "npm:^9.39.5"
@@ -2146,10 +2146,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"undici-types@npm:~7.21.0":
-  version: 7.21.0
-  resolution: "undici-types@npm:7.21.0"
-  checksum: 10c0/c3b4ae5f066c398acb1962505b56214ecd72843f7d7827fcc2df7a48a63d1639d3608c580ac09f836253d21fa7ba8f1a04440569ed9d332474ad01b8a010db87
+"undici-types@npm:~8.9.0":
+  version: 8.9.0
+  resolution: "undici-types@npm:8.9.0"
+  checksum: 10c0/51c712c20c087368f62c6fc0f2bc49fa76bfe5dec28ff01584bb677ff29b0622569783c02d43e151143808c48c0503f804093bd2c491b10f2a830138034cb451
   languageName: node
   linkType: hard
 
